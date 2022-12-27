@@ -1,0 +1,15 @@
+* {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.bg-orange {
+    background-color: orange !important;
+}
+
+.text-orange {
+    color: orange !important;
+}
+
+.border-orange {
+    border-color: orange;
+}
