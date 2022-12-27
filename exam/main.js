@@ -95,10 +95,9 @@ function addRoutesToMainTable(data, page = 1) {
             getGuidesById(record.id).then(result => {
                 guidesData = result;
                 addGuidesToMainTable(result);
-                createDefaultFilters("selectLangGuideForm", "Язык экскурсии");
-                createDefaultFilters("selectExpGuideForm", "Опыт работы");
+                createDefaultFilterLanguage("selectLangGuideForm", "Язык экскурсии");
+                createDefaultFilterExp(result);
                 addOptionsToLangSelect(result);
-                addOptionsToWorkExpSelect(result);
                 setRouteIdToForm(record.id);
             })
             showAndGoGuides();
@@ -239,21 +238,21 @@ async function getGuidesById(id) {
 }
 
 function searchGuidesByLangHandler(event) {
-    searchGuidesByFilters("lang",event.target.value);
+    searchGuidesByFiltersAndValidate();
 }
 
 function searchGuidesByExpHandler(event) {
-    searchGuidesByFilters("exp",event.target.value);
+    searchGuidesByFiltersAndValidate();
 }
 
-function searchGuidesByFilters() {
+function searchGuidesByFiltersAndValidate() {
     let routeId = document.querySelector("#routeNameGuideSection").dataset.id;
-    let workExp, language;
-    if(document.querySelector("#selectExpGuideForm").value != "default") {
-        workExp = document.querySelector("#selectExpGuideForm").value;
-    } else {
-        workExp = -1;
-    }
+    let language;
+    let workExpMin = document.querySelector("#selectMinExpGuideForm");
+    let workExpMax = document.querySelector("#selectMaxExpGuideForm");
+
+    workExpMin.setAttribute("max", workExpMax.value);
+    workExpMax.setAttribute("min", workExpMin.value);
 
     if(document.querySelector("#selectLangGuideForm").value != "default") {
         language = document.querySelector("#selectLangGuideForm").value;
@@ -263,9 +262,8 @@ function searchGuidesByFilters() {
 
     getGuidesById(routeId).then(result => {
         let resultArray = [];
-        if (workExp == -1) {
+        if (workExpMin.value == -1) {
             for (let record of result) {
-                console.log(workExp);
                 if (record.language.includes(language)) {
                     resultArray.push(record);
                 }
@@ -274,7 +272,8 @@ function searchGuidesByFilters() {
             return;
         }
         for (let record of result) {
-            if (record.workExperience == workExp &&
+            if (record.workExperience >= workExpMin.value &&
+            record.workExperience <= workExpMax.value && 
             record.language.includes(language)) {
                 resultArray.push(record);
             }
@@ -283,39 +282,42 @@ function searchGuidesByFilters() {
     });
 }
 
-function createDefaultFilters(id, inner) {
-    let filterSelect = document.querySelector(`#${id}`);
+function createDefaultFilterExp(data) {
+    let selectMinExpGuideForm = document.querySelector("#selectMinExpGuideForm");
+    let selectMaxExpGuideForm = document.querySelector("#selectMaxExpGuideForm");
+
+    let workExpArray = [];
+
+    for (let record of data) {
+        workExpArray.push(record.workExperience);
+    }
+
+    let minWorkExp = Math.min(...workExpArray);
+    let maxWorkExp = Math.max(...workExpArray);
+
+    selectMinExpGuideForm.setAttribute("min", minWorkExp);
+    selectMinExpGuideForm.setAttribute("max", maxWorkExp);
+    selectMinExpGuideForm.setAttribute("value", minWorkExp);
+
+    selectMaxExpGuideForm.setAttribute("min", minWorkExp);
+    selectMaxExpGuideForm.setAttribute("max", maxWorkExp);
+    selectMaxExpGuideForm.setAttribute("value", maxWorkExp);
+
+}
+
+function createDefaultFilterLanguage() {
+    let filterSelect = document.querySelector("#selectLangGuideForm");
     filterSelect.innerHTML = "";
     let defaultOption = document.createElement("option");
     defaultOption.setAttribute("selected", "selected");
     defaultOption.setAttribute("disabled", "disabled");
     defaultOption.setAttribute("value", "default");
-    defaultOption.innerText = inner;
+    defaultOption.innerText = "Язык экскурсии";
     filterSelect.appendChild(defaultOption);
 }
 
 function setNameOfRoute(name) {
     document.querySelector("#routeNameGuideSection").innerText = name;
-}
-
-function compare(x, y) {
-    if (x > y) return 1;
-    if (x == y) return 0;
-    if (x < y) return -1; 
-  }
-
-function addOptionsToWorkExpSelect(data) {
-    let selectExpGuideForm = document.querySelector("#selectExpGuideForm");
-    let workExpArray = [];
-    for (let record of data) {
-        workExpArray.push(record.workExperience);
-    }
-
-    selectExpGuideForm.setAttribute("min", Math.min(...workExpArray));
-    selectExpGuideForm.setAttribute("value", Math.min(...workExpArray));
-
-    selectExpGuideForm.setAttribute("max", Math.max(...workExpArray));
-
 }
 
 function addOptionsToLangSelect(data) {
@@ -681,7 +683,8 @@ window.onload = function (){
     document.querySelector("#searchByNameInput").oninput = searchByNameInputHandler;
     document.querySelector("#selectRouteForm").onchange = searchRoutesByObjectsHandler;
     document.querySelector("#selectLangGuideForm").onchange = searchGuidesByLangHandler;
-    document.querySelector("#selectExpGuideForm").onchange = searchGuidesByExpHandler;
+    document.querySelector("#selectMinExpGuideForm").onchange = searchGuidesByExpHandler;
+    document.querySelector("#selectMaxExpGuideForm").onchange = searchGuidesByExpHandler;
 
 
     // let modalCreateOrder = document.querySelector('#openAddOrderBtn');
@@ -697,12 +700,6 @@ window.onload = function (){
 
     let time = document.querySelector("#time");
     time.oninput = validateTime;
-
-    let selectExpGuideForm = document.querySelector("#selectExpGuideForm");
-    selectExpGuideForm.addEventListener("input", (event) => {
-        let rangeExpOutputForm = document.querySelector("#rangeExpOutputForm");
-        rangeExpOutputForm.innerText = event.target.value;
-    });
 
     let elementsModalForm = document.querySelectorAll(".add-order-extra-class");
     for (let element of elementsModalForm) {
