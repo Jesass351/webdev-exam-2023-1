@@ -546,7 +546,8 @@ function calculatePrice() {
 
     let totalPrice = guideServiceCost * hoursNumber * dayOff + morning;
     totalPrice = totalPrice + evening + persons;
-    price.innerText = totalPrice * optionFirst * optionSecond;
+    totalPrice = totalPrice * optionFirst * optionSecond
+    price.innerText = Math.round(totalPrice);
 }
 
 function getMultiplyerSecondOption(checked, dateString) {
@@ -615,18 +616,12 @@ async function addOrderBtnHandler(event) {
     let formCreateOrder = document.querySelector("#modalForm");
     formElements = formCreateOrder.elements;
     console.log(formElements);
-    let guideId = formElements["guideId"].value;
-    let routeId = formElements["routeId"].value;
-    let date = formElements["date"].value;
-    let time = formElements["time"].value;
-    let duration = formElements["duration"].value;
-    let persons = formElements["persons"].value;
+
     let price = document.querySelector("#price").innerText;
     let optionFirst = formElements["optionFirst"].checked ? 1 : 0;
     let optionSecond = formElements["optionSecond"].checked ? 1 : 0;
 
-    let finalURL = new URL(defaultURL + "/orders");
-    finalURL.searchParams.append("api_key", apiKey);
+
 
     let form = document.createElement("form");
     let dataFromForm = new FormData(form);
@@ -641,8 +636,8 @@ async function addOrderBtnHandler(event) {
     dataFromForm.append("optionFirst", optionFirst);
     dataFromForm.append("optionSecond", optionSecond);
 
-
-
+    let finalURL = new URL(defaultURL + "/orders");
+    finalURL.searchParams.append("api_key", apiKey);
 
     try {
         let res = await fetch(finalURL, {
@@ -651,6 +646,8 @@ async function addOrderBtnHandler(event) {
         });
         let data = await res.json();
         console.log(data);
+
+        showMessage("success", "Заказ успешно оформлен");
     } catch(error) {
         showMessage("warning", error)
     }
