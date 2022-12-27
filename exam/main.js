@@ -414,20 +414,12 @@ function openAddOrderModalHandler(event) {
     setRouteNameToModal();
     setGuideNameToModal(getCheckedGuide());
     setTodayDate();
-
-    let formCreateOrder = document.querySelector("#modalForm");
-    formElements = formCreateOrder.elements;
-    let date = formElements["date"].value;
-    let time = formElements["time"].value;
-    let duration = formElements["duration"].value;
-    let persons = formElements["persons"].value;
-    
-
+    calculatePrice();
 }
 
 function setTodayDate() {
     let today = new Date();
-    let day = String(today.getDate());
+    let day = String(today.getDate() + 1);
     let month = String(today.getMonth() + 1);
     let year = today.getFullYear();
 
@@ -528,7 +520,7 @@ function setRouteIdToForm(id) {
     routeId.value = id;
 }
 
-function calculatePrice(event) {
+function calculatePrice() {
     let price = document.querySelector("#price");
     let form = document.querySelector("#modalForm");
     let formElements = form.elements;
@@ -545,12 +537,30 @@ function calculatePrice(event) {
 
     persons = numberOfVisitors(persons);
 
-    console.log(persons);
+    let optionFirstStatus = formElements["optionFirst"].checked;
 
+    let optionFirst = optionFirstStatus ? 1.3 : 1;
+
+    let optionSecondStatus = formElements["optionSecond"].checked;
+    let optionSecond = getMultiplyerSecondOption(optionSecondStatus,date);
 
     let totalPrice = guideServiceCost * hoursNumber * dayOff + morning;
     totalPrice = totalPrice + evening + persons;
-    price.innerText = totalPrice;
+    price.innerText = totalPrice * optionFirst * optionSecond;
+}
+
+function getMultiplyerSecondOption(checked, dateString) {
+    let [year, month, day] = dateString.split('-');
+
+    let date = new Date(year, month - 1, day);
+
+    let monthAndDay = `${month}-${day}`;
+
+    if (date.getDay() == 0 || date.getDay() == 6 && checked) {
+        return 1.25;
+    } else if (checked) {
+        return 1.3;
+    } else return 1;
 }
 
 function numberOfVisitors(persons) {
@@ -589,8 +599,8 @@ const holidays = [
     '05-01',
 ]
 
-function isThisDayOff(dateStr) {
-    let [year, month, day] = dateStr.split('-');
+function isThisDayOff(dateString) {
+    let [year, month, day] = dateString.split('-');
 
     let date = new Date(year, month - 1, day);
 
@@ -599,6 +609,51 @@ function isThisDayOff(dateStr) {
     if (date.getDay() == 0 || date.getDay() == 6 || (holidays.includes(monthAndDay))) {
         return 1.5;
     } else return 1;
+}
+
+async function addOrderBtnHandler(event) {
+    let formCreateOrder = document.querySelector("#modalForm");
+    formElements = formCreateOrder.elements;
+    console.log(formElements);
+    let guideId = formElements["guideId"].value;
+    let routeId = formElements["routeId"].value;
+    let date = formElements["date"].value;
+    let time = formElements["time"].value;
+    let duration = formElements["duration"].value;
+    let persons = formElements["persons"].value;
+    let price = document.querySelector("#price").innerText;
+    let optionFirst = formElements["optionFirst"].checked ? 1 : 0;
+    let optionSecond = formElements["optionSecond"].checked ? 1 : 0;
+
+    let finalURL = new URL(defaultURL + "/orders");
+    finalURL.searchParams.append("api_key", apiKey);
+
+    let form = document.createElement("form");
+    let dataFromForm = new FormData(form);
+
+    dataFromForm.append("guide_id", formElements["guideId"].value);
+    dataFromForm.append("route_id", formElements["routeId"].value);
+    dataFromForm.append("date", formElements["date"].value);
+    dataFromForm.append("time", formElements["time"].value);
+    dataFromForm.append("duration", formElements["duration"].value);
+    dataFromForm.append("persons", formElements["persons"].value);
+    dataFromForm.append("price", price);
+    dataFromForm.append("optionFirst", optionFirst);
+    dataFromForm.append("optionSecond", optionSecond);
+
+
+
+
+    try {
+        let res = await fetch(finalURL, {
+            method: 'POST',
+            body: dataFromForm
+        });
+        let data = await res.json();
+        console.log(data);
+    } catch(error) {
+        showMessage("warning", error)
+    }
 }
 
 window.onload = function (){
@@ -635,9 +690,12 @@ window.onload = function (){
     // let modalCreateOrder = document.querySelector('#openAddOrderBtn');
     // modalCreateOrder.addEventListener('show.bs.modal', addOrder);
 
-    let openAddOrderBtn = document.getElementById("openAddOrderBtn");
+    let openAddOrderBtn = document.querySelector("#openAddOrderBtn");
     // openAddOrderBtn.addEventListener('show.bs.modal', openAddOrderModalHandler);
-    openAddOrderBtn.addEventListener('click', openAddOrderModalHandler);
+    openAddOrderBtn.addEventListener("click", openAddOrderModalHandler);
+
+    let addOrderBtn = document.querySelector("#addOrderBtn");
+    addOrderBtn.addEventListener("click", addOrderBtnHandler);
 
 
     let time = document.querySelector("#time");
