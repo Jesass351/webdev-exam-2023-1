@@ -13,3 +13,11 @@
 .border-orange {
     border-color: orange;
 }
+
+#containerMap {
+    height: 400px;
+}
+
+.fs-7{
+    font-size: 0.8rem;
+}

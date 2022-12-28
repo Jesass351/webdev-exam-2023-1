@@ -1,6 +1,10 @@
 const apiKey = "cf43badf-645c-488b-9363-39198ca1ce8d";
 const defaultURL = "http://exam-2023-1-api.std-900.ist.mospolytech.ru/api"
 
+const defaultURLDecodeAddress = "https://catalog.api.2gis.com/3.0/items/geocode"
+const apiKeyDecodeAddress = "rulmsy3374";
+
+
 
 function showMessage(style, message) {
     let alerts = document.querySelector("#alertsContainer");
@@ -103,6 +107,8 @@ function addRoutesToMainTable(data, page = 1) {
             showAndGoGuides();
             setNameOfRoute(record.name);
             document.querySelector("#routeNameGuideSection").setAttribute("data-id", record.id);
+            // showMapSection();
+            setCorrectCoordsToMarker(record.coords);
         });
         selectBtnDiv.appendChild(selectBtn);
         newRow.appendChild(selectBtnDiv);
@@ -111,6 +117,7 @@ function addRoutesToMainTable(data, page = 1) {
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 }
+
 
 function createPaginationBtns(page = 1, special = "") {
     let paginationBtnBlock = document.querySelector("#paginationBtnBlock");
@@ -169,7 +176,8 @@ function pageBtnHandler(event) {
 
 function searchRoutesByName(searchName) {
     let object;
-    if(document.querySelector("#selectRouteForm").value != "default") {
+    if(document.querySelector("#selectRouteForm").value != "default" &&
+    document.querySelector("#selectRouteForm").value != "notSelected") {
         object = document.querySelector("#selectRouteForm").value;
     } else {
         object = "";
@@ -190,8 +198,12 @@ function searchByNameInputHandler(event) {
 }
 
 function searchRoutesByObjects(objectName) {
+    if (objectName == "notSelected") {
+        addRoutesToMainTable(allDataRoutes);
+        return;
+    }
     let searchName;
-    if(document.querySelector("#searchByNameInput").value) {
+    if(document.querySelector("#searchByNameInput").value != "notSelected") {
         searchName = document.querySelector("#searchByNameInput").value;
     } else {
         searchName = "";
@@ -339,14 +351,14 @@ function addOptionsToLangSelect(data) {
 function showAndGoGuides() {
     let tourGuideSection = document.getElementById("tourGuideSection");
     tourGuideSection.classList.remove("d-none");
-    window.location.href = "#tourGuideSection";
+    window.location.href = "#mapSection";
 }
 
 function addGuidesToMainTable(data) {
     let mainGiudeTable = document.querySelector("#mainGiudeTable");
     mainGiudeTable.innerHTML = "";
     for (let record of data) {
-        console.log(record);
+        // console.log(record);
         let newRow = document.createElement("div");
         newRow.classList.add("row", "text-center", "p-0", "pt-1", "pb-2", "border-top");
 
@@ -617,7 +629,7 @@ function isThisDayOff(dateString) {
 async function addOrderBtnHandler(event) {
     let formCreateOrder = document.querySelector("#modalForm");
     formElements = formCreateOrder.elements;
-    console.log(formElements);
+    // console.log(formElements);
 
     let price = document.querySelector("#price").innerText;
     let optionFirst = formElements["optionFirst"].checked ? 1 : 0;
@@ -647,7 +659,6 @@ async function addOrderBtnHandler(event) {
             body: dataFromForm
         });
         let data = await res.json();
-        console.log(data);
 
         showMessage("success", "Заказ успешно оформлен");
     } catch(error) {
@@ -655,7 +666,173 @@ async function addOrderBtnHandler(event) {
     }
 }
 
+function searchAddressBtnHandler(event) {
+    let startAddress = document.querySelector("#startAddressInput").value;
+
+    let tourGuideSection = document.querySelector("#tourGuideSection");
+    if (tourGuideSection.classList.contains("d-none")) {
+        showMessageMapDiv("Сначала выберите маршрут");
+        return;
+    }
+
+    if (startAddress.length == 0) {
+        showMessageMapDiv("Проверьте правильность введённого адреса");
+        return;
+    }
+
+    getCoordinates(startAddress).then(data => {
+        if (data.result.total != "1") {
+            showMessageMapDiv("Проверьте правильность введённого адреса");
+            return;
+        }
+        addCurrentAddressMarker(data.result.items[0].point)
+    })
+
+}
+
+let markerCurrentAddress;
+
+function addCurrentAddressMarker(point) {
+    if (markerCurrentAddress) {
+        markerCurrentAddress.destroy();
+    }
+
+    markerCurrentAddress = new mapgl.Marker(map, {
+        coordinates: [point.lon, point.lat],
+        label: {
+            text: "Вы здесь",
+            offset: [0, -75],
+            image: {
+                url: 'https://docs.2gis.com/img/mapgl/tooltip.svg',
+                size: [100, 40],
+                padding: [10, 10, 20, 10],
+            },
+        }
+    });
+
+    map.setCenter([point.lon, point.lat]);
+
+    checkAndAddDirections();
+}
+
+let markerDestAddress;
+
+function addDestAddressMarker(point) {
+    if (markerDestAddress) {
+        markerDestAddress.destroy();
+    }
+
+    markerDestAddress = new mapgl.Marker(map, {
+        coordinates: [point[0], point[1]],
+        label: {
+            text: "Место назначения",
+            offset: [0, -75],
+            image: {
+                url: 'https://docs.2gis.com/img/mapgl/tooltip.svg',
+                size: [100, 40],
+                padding: [10, 10, 20, 10],
+            },
+        }
+    });
+
+    map.setCenter([point.lon, point.lat]);
+
+    checkAndAddDirections();
+}
+
+function setCorrectCoordsToMarker(pointList) {
+    if (typeof(pointList[0]) === "number") {
+        addDestAddressMarker(pointList);
+        console.log(pointList + "2 numbers");
+    } else if (pointList[0] instanceof Object) {
+        if (typeof(pointList[0][0]) === "number") {
+            addDestAddressMarker(pointList[0]);
+            console.log(pointList[0] + "1x array");
+        } else if (pointList[0][0] instanceof Object) {
+            if (typeof(pointList[0][0][0]) === "number") {
+                addDestAddressMarker(pointList[0][0]);
+                console.log(pointList[0][0] + "2x array");
+            };
+        };
+    };
+}
+
+function createDirections(firstPoint, secondPoint){
+    const directions = new mapgl.Directions(map, {
+        directionsApiKey: 'ffcb67d7-ac14-44b4-8302-ce9db35ca3b0',
+    });
+
+    console.log(firstPoint);
+    console.log(secondPoint);
+
+    directions.pedestrianRoute({
+        points: [
+            firstPoint, 
+            secondPoint,
+        ],
+    });
+}
+
+function checkAndAddDirections() {
+    if (markerDestAddress && markerCurrentAddress) {
+        createDirections(markerCurrentAddress.getCoordinates(),
+        markerDestAddress.getCoordinates());
+    }
+
+
+}
+
+function showMessageMapDiv(messageText) {
+    let messageDiv = document.createElement("div");
+    messageDiv.classList.add("my-3", "p-2", "rounded-2", "bg-warning");
+
+    let message = document.createElement("span");
+    message.innerText = messageText;
+    messageDiv.appendChild(message);
+
+    startAddressDiv.appendChild(messageDiv);
+
+    setTimeout(() => {
+        messageDiv.remove();
+    },3000);
+}
+
+
+async function getCoordinates(address) {
+
+    let finalURL = new URL(defaultURLDecodeAddress);
+    finalURL.searchParams.append("q", "Москва, " + address);
+    finalURL.searchParams.append("fields", "items.point");
+    finalURL.searchParams.append("key", apiKeyDecodeAddress);
+
+    try {
+        let response = await fetch(finalURL);
+        let data = await response.json();
+        
+        return data;
+    } catch(error) {
+        showMessage("warning", error.message)
+    }
+}
+
+function showMapSection() {
+    let mapSection = document.querySelector("#mapSection");
+    mapSection.classList.remove("d-none");
+}
+
+let map;
+
 window.onload = function (){
+
+    window.location.href = "#navbar";
+
+    map = new mapgl.Map('containerMap', {
+        center: [37.61938696289053, 55.75135224786582],
+        zoom: 13,
+        key: 'ffcb67d7-ac14-44b4-8302-ce9db35ca3b0',
+        lang: "ru",
+    });
+
     createPaginationBtns();
 
     getAllRoutes();
@@ -705,4 +882,7 @@ window.onload = function (){
     for (let element of elementsModalForm) {
         element.onchange = calculatePrice;
     }
+
+    let searchAddressBtn = document.querySelector("#searchAddress");
+    searchAddressBtn.onclick = searchAddressBtnHandler;
 }

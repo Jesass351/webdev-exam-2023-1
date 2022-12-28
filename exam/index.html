@@ -12,7 +12,7 @@
     <title>ATravel</title>
 </head>
 <body>
-    <header class="header-navbar">
+    <header class="header-navbar" id="navbar">
         <nav class="navbar navbar-expand-lg bg-orange py-4">
             <div class="container-fluid">
                 <img src="images/logo/logo_white.png" width="100px" height="100px" alt="" class="img-fluid">
@@ -30,7 +30,7 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav w-100">
                     <li class="nav-item w-100">
-                        <a class="nav-link active fw-bold text-uppercase text-white text-end" aria-current="page" href="#">Панель администрирования</a>
+                        <a class="nav-link active fw-bold text-uppercase text-white text-end" aria-current="page" href="admin.html">Панель администрирования</a>
                     </li>
                 </ul>
             
@@ -70,6 +70,7 @@
                     <div class="col-sm-12 col-md-6 mb-3">
                         <select id="selectRouteForm" class="form-select">
                             <option value="default" selected disabled>Основной объект</option>
+                            <option value="notSelected">Не выбрано</option>
                         </select>
                     </div>
                 </div>
@@ -104,6 +105,24 @@
                 <button class="btn last-page-btn border-5 border-orange text-orange ms-1">Последняя страница</button>
             </div>
         </div>
+
+    </section>
+
+    <section id="mapSection">
+        <div class="container-fluid justify-content-center">
+            <header class="fs-4 fw-bold text-center">
+                <span class="text-orange">Карта</span>
+            </header>
+
+            <div class="container-fluid my-5" id="startAddressDiv">
+
+                <label for="" class="form-label">Откуда Вы хотите начать путешествие?</label>
+                <input type="text" class="form-control mb-3" id="startAddressInput" placeholder="Медовый переулок, 12">
+
+                <button class="btn border-orange text-orange w-100" id="searchAddress">Начать</button>
+            </div>
+        </div>
+        <div class="container-map" id="containerMap"></div>
 
     </section>
 
@@ -313,7 +332,11 @@
         </footer>
     </div>
     <button id="btn">dsds</button>
+    <script src="https://mapgl.2gis.com/api/js/v1"></script>
+    <script src="https://unpkg.com/@2gis/mapgl-directions@^2/dist/directions.js"></script>
+
     <script src="main.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
 </body>
