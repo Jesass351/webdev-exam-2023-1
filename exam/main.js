@@ -254,7 +254,7 @@ function createDirections(firstPoint, secondPoint) {
     const directions = new mapgl.Directions(map, {
         directionsApiKey: 'ffcb67d7-ac14-44b4-8302-ce9db35ca3b0',
     });
-    
+
     directions.clear(); //как тебя удалить то...
     console.log(directions);
 
@@ -935,6 +935,7 @@ window.onload = function () {
         addRoutesToMainTable(result.slice(0, 10));
         // console.log(Math.floor(result.length / 10));
         lastPageBtn.setAttribute("data-page", Math.floor(result.length / 10));
+        allDataRoutes = result;
     });
 
     let clearRoutesFiltersBtn;
