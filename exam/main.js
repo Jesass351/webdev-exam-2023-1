@@ -249,12 +249,15 @@ function showAndGoGuides() {
 }
 
 function createDirections(firstPoint, secondPoint) {
+    console.log(map);
+
     const directions = new mapgl.Directions(map, {
         directionsApiKey: 'ffcb67d7-ac14-44b4-8302-ce9db35ca3b0',
     });
+    
+    directions.clear(); //как тебя удалить то...
+    console.log(directions);
 
-    // console.log(firstPoint);
-    // console.log(secondPoint);
 
     directions.pedestrianRoute({
         points: [
@@ -274,7 +277,9 @@ function checkAndAddDirections() {
     }
 }
 
+
 function addCurrentAddressMarker(point) {
+    console.log(markerCurrentAddress);
     if (markerCurrentAddress) {
         markerCurrentAddress.destroy();
     }
@@ -465,7 +470,11 @@ function createPaginationBtn(currentPage, specialParam = "notLast") {
         start = 1;
     }
 
-    if (specialParam == "last") {
+    let lastPageBtn;
+    lastPageBtn = document.querySelector(".last-page-btn");
+    // console.log(currentPage);
+
+    if (specialParam == "last" || lastPageBtn.dataset.page + 1 <= currentPage) {
         end = start + 1;
     } else {
         end = start + 2;
@@ -598,7 +607,7 @@ function setTodayDate() {
     let date = document.querySelector("#date");
     date.setAttribute("value", today);
     date.setAttribute("min", today);
-    console.log(date);
+    // console.log(date);
 }
 
 function setRouteNameToModal() {
