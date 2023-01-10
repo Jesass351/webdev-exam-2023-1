@@ -37,7 +37,7 @@ async function getAllRoutes(page = 1) {
         let response = await fetch(finalURL);
         let data = await response.json();
 
-        // showMessage("success","Данные успешно загружены!");
+        showMessage("success","Данные успешно загружены");
         addObjectsToSelect(data);
 
         return data.slice(page * 10 - 10, page * 10);
@@ -62,14 +62,15 @@ function addRoutesToMainTable(data) {
         newRow.appendChild(name);
         
         let description = document.createElement('div');
-        description.classList.add("col-3", "mt-1", "border-end");
+        description.classList.add("col-3", "mt-1", "border-end", "p-0");
         let descriptionText = document.createElement("p");
-        descriptionText.classList.add("muted");
-        if (record.description.length > 100) {
+        descriptionText.classList.add("muted", "text-break");
+        if (record.description.length > 50) {
             let descriptionToolTip = document.createElement("a");
+            descriptionToolTip.classList.add("fs-7")
             descriptionToolTip.setAttribute("data-bs-toggle", "tooltip");
             descriptionToolTip.setAttribute("data-bs-title", record.description);
-            descriptionToolTip.innerText = record.description.slice(0,100) + "...";
+            descriptionToolTip.innerText = record.description.slice(0,50) + "...";
             descriptionText.appendChild(descriptionToolTip);
         } else {
             descriptionText.innerText = record.description;
@@ -79,12 +80,32 @@ function addRoutesToMainTable(data) {
 
         let mainObjects = document.createElement('div');
         mainObjects.classList.add("col-3", "border-end");
-        let mainObjectList = record.mainObject.split("-");
-        for (let object of mainObjectList) {
-            let oneObjectRecord = document.createElement("p");
-            oneObjectRecord.innerText = object;
-            mainObjects.appendChild(oneObjectRecord);
+
+        let mainObjectsText = document.createElement("p");
+        mainObjectsText.classList.add("muted");
+
+        if (record.mainObject.length > 100) {
+            let objectsToolTip = document.createElement("a");
+            objectsToolTip.classList.add("text-break");
+            objectsToolTip.setAttribute("data-bs-toggle", "tooltip");
+            objectsToolTip.setAttribute("data-bs-title", record.description);
+            let mainObjectList = record.mainObject.slice(0,100).split("-");
+            for (let object of mainObjectList) {
+                objectsToolTip.innerText += object;
+                objectsToolTip.innerHTML += "<br>";
+            }
+            // objectsToolTip.innerText = record.description.slice(0,100) + "...";
+            mainObjectsText.appendChild(objectsToolTip);
+            // for (let object of mainObjectList) {
+            //     let oneObjectRecord = document.createElement("p");
+            //     oneObjectRecord.classList.add("text-break");
+            //     oneObjectRecord.innerText = object;
+            //     mainObjects.appendChild(oneObjectRecord);
+            // }
         }
+
+        mainObjects.appendChild(mainObjectsText);
+
         newRow.appendChild(mainObjects);
 
         let selectBtnDiv = document.createElement("div");
@@ -164,7 +185,6 @@ function searchRoutesByName(searchName) {
 
 function searchByNameInputHandler(event) {
     searchRoutesByName(document.querySelector("#searchByNameInput").value);
-    createPaginationBtns(1);
 }
 
 function searchRoutesByObjects(objectName) {

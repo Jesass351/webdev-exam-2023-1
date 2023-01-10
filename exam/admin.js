@@ -460,12 +460,14 @@ async function deleteOrderById(id) {
             method: 'DELETE',
         });
 
+        let recordId = await res.json();
+
         getAllOrders().then(result => {
             addPaginationBtns(result.length);
             addToOrderTable(result);
         })
 
-        showMessage("success", "Заказ успешно удалён");
+        showMessage("success", `Заказ ${recordId.id} успешно удалён`);
 
     } catch(error) {
         showMessage("warning", error.message)
