@@ -38,22 +38,20 @@ async function getAllRoutes(page = 1) {
         let data = await response.json();
 
         // showMessage("success","Данные успешно загружены!");
-        addRoutesToMainTable(data, page);
         addObjectsToSelect(data);
 
-        return data;
+        return data.slice(page * 10 - 10, page * 10);
     }
     catch(error) {
         showMessage("warning", error.message);
     }
 }
 
-function addRoutesToMainTable(data, page = 1) {
+function addRoutesToMainTable(data) {
     let mainTable = document.querySelector("#mainRoutesTable");
     mainTable.innerHTML = "";
-    let text = document.createElement('span');
-    let newData = data.slice(page*10-10,page*10);
-    for (let record of newData) {
+
+    for (let record of data) {
         let newRow = document.createElement('div');
         newRow.classList.add("row","p-0", "mb-3", "border-top");
         mainTable.appendChild(newRow);
@@ -118,60 +116,32 @@ function addRoutesToMainTable(data, page = 1) {
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 }
 
-
-function createPaginationBtns(page = 1, special = "") {
+function createPaginationBtn(currentPage) {
     let paginationBtnBlock = document.querySelector("#paginationBtnBlock");
     paginationBtnBlock.innerHTML = "";
-
-    let dataLen;
-
-    if(document.querySelector("#searchByNameInput").value != "") {
-        dataLen = searchRoutesByName(document.querySelector("#searchByNameInput").value).length;
+    let start = currentPage - 1;
+    if (currentPage == 1) {
+        start = 1
     }
 
-    if (page == 1 && !special) {
-        for (let i = 0; i < 3; i++) {
-            let button = document.createElement("button");
-            button.classList.add("btn", "border-5", "border-orange", "text-orange", "mx-1");
-            button.setAttribute("data-page", page + i);
-            button.innerText = page + i;
-            paginationBtnBlock.appendChild(button);
+    for (i = start; i <= start + 2; i++) {
+        let newPageBtn = document.createElement("button");
+        newPageBtn.classList.add("btn", "pagination-btn", "border-5", "border-orange", "me-1");
+        newPageBtn.classList.add("border-orange", "me-1", "text-orange");
+        newPageBtn.setAttribute("data-page", i);
+        newPageBtn.innerText = i;
+        if (i == currentPage) {
+            newPageBtn.classList.remove("text-orange");
+            newPageBtn.classList.add("bg-orange", "text-white");
         }
-    } else if(!special){
-        for (let i = -1; i < 2; i++) {
-            let button = document.createElement("button");
-            button.classList.add("btn", "border-5", "border-orange", "text-orange", "mx-1");
-            button.setAttribute("data-page", page + i);
-            button.innerText = page + i;
-            paginationBtnBlock.appendChild(button);
-        }
-    } else {
-        for (let i = -1; i < 1; i++) {
-            let button = document.createElement("button");
-            button.classList.add("btn", "border-5", "border-orange", "text-orange", "mx-1");
-            button.setAttribute("data-page", page + i);
-            button.innerText = page + i;
-            paginationBtnBlock.appendChild(button);
-        }
-    }
 
-    document.querySelector(`[data-page="${page}"]`).classList.remove("text-orange");
-    document.querySelector(`[data-page="${page}"]`).classList.add("bg-orange", "text-white");
-}
+        newPageBtn.addEventListener("click", () => {
+            createPaginationBtn(newPageBtn.dataset.page);
+            scrollTo(0,0);
+        });
 
-function pageBtnHandler(event) {
-    createPaginationBtns(parseInt(event.target.innerText,10));
-    getAllRoutes(parseInt(event.target.innerText,10));
-
-    if(event.target.classList.contains("first-page-btn")) {
-        createPaginationBtns(1);
-        getAllRoutes(1);
+        paginationBtnBlock.appendChild(newPageBtn);
     }
-    if (event.target.classList.contains("last-page-btn")) {
-        createPaginationBtns(12, "last");
-        getAllRoutes(12);
-    }
-    scrollTo(0, 0);
 }
 
 function searchRoutesByName(searchName) {
@@ -395,7 +365,7 @@ function addGuidesToMainTable(data) {
 
         let chooseBtn = document.createElement("input");
         chooseBtn.classList.add("form-check-input", "guideCheckbox");
-        chooseBtn.setAttribute("type", "checkbox");
+        chooseBtn.setAttribute("type", "radio");
         chooseBtn.setAttribute("data-id", record.id);
         chooseBtn.setAttribute("data-name", record.name);
         chooseBtn.setAttribute("data-price", record.pricePerHour);
@@ -740,17 +710,19 @@ function addDestAddressMarker(point) {
     checkAndAddDirections();
 }
 
+//вытаскивание координат из массива, массива с массивами,
+//массива в массиве с массивом 
 function setCorrectCoordsToMarker(pointList) {
     if (typeof(pointList[0]) === "number") {
-        addDestAddressMarker(pointList);
+        addDestAddressMarker(pointList); //coords[x,y]
         console.log(pointList + "2 numbers");
     } else if (pointList[0] instanceof Object) {
         if (typeof(pointList[0][0]) === "number") {
-            addDestAddressMarker(pointList[0]);
+            addDestAddressMarker(pointList[0]); //coords[[x,y]]
             console.log(pointList[0] + "1x array");
         } else if (pointList[0][0] instanceof Object) {
             if (typeof(pointList[0][0][0]) === "number") {
-                addDestAddressMarker(pointList[0][0]);
+                addDestAddressMarker(pointList[0][0]); //coords[[[x,y]]]
                 console.log(pointList[0][0] + "2x array");
             };
         };
@@ -833,13 +805,12 @@ window.onload = function (){
         lang: "ru",
     });
 
-    createPaginationBtns();
+    createPaginationBtn(1);
 
-    getAllRoutes();
-
-    getAllRoutes().then(result => allDataRoutes = result);
-
-    document.querySelector('.pagination').onclick = pageBtnHandler;
+    getAllRoutes().then(result => {
+        addRoutesToMainTable(result);
+        allDataRoutes = result;
+    });
 
     let btn = document.querySelector('#btn').addEventListener("click", ()=>{
         showMessage("success", Date.now());

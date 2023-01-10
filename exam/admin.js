@@ -39,10 +39,11 @@ async function getAllOrders() {
     }
 }
 
-function addToOrderTable(data) {
-    let counter = 1;
+function addToOrderTable(data, page = 1) {
+    let counter = page*5 - 4;
     let ordersList = document.querySelector("#ordersList");
     ordersList.innerHTML = "";
+    data = data.slice(page*5 - 5, page*5);
     for (let record of data) {
         let newRow = document.createElement("div");
         newRow.classList.add("row", "text-center", "mb-3", "border-top");
@@ -73,6 +74,9 @@ function addToOrderTable(data) {
         detailsBtn.classList.add("p-1", "fs-7");
         detailsBtn.setAttribute("data-orderid", record.id);
         detailsBtn.innerText = "Подробнее";
+        detailsBtn.addEventListener("click", () => {
+            showDetails(record);
+        })
 
         detailsDiv.appendChild(detailsBtn);
         newRow.appendChild(detailsDiv);
@@ -101,6 +105,73 @@ function addToOrderTable(data) {
         counter++;
         ordersList.appendChild(newRow);
     }
+}
+
+function showDetails(data) {
+    console.log(data);
+
+    let orderIdDetails = document.querySelector("#orderIdDetails");
+    orderIdDetails.innerText = data.id;
+
+    let guideName = document.querySelector("#guideNameDetails");
+    getGuideById(data.guide_id).then(result => {
+        guideName.innerText = result.name;
+    })
+
+    let routeName = document.querySelector("#routeNameDetails");
+    getNameOfRouteById(data.route_id).then(result => {
+        routeName.innerText = result;
+    })
+
+    let date = document.querySelector("#dateDetails");
+    date.innerText = getNormalDate(data.date);
+
+    let time = document.querySelector("#timeDetails");
+    time.innerText = data.time.slice(0,5);
+
+    let duration = document.querySelector("#durationDetails");
+    duration.innerText = `${data.duration} часа`;
+
+    let persons = document.querySelector("#personsDetails");
+    persons.innerText = data.persons;
+
+    let optionFirst = document.querySelector("#optionFirstDetails");
+    optionFirst.innerHTML = "";
+    if(data.optionFirst) {
+        let mainText = document.createElement("p");
+        mainText.innerText = "Быстрый выезд гида (в течение часа)*";
+
+        let increaseText = document.createElement("p");
+        increaseText.innerText = "* +30%"
+
+        optionFirst.appendChild(mainText);
+        optionFirst.appendChild(increaseText);
+    }
+
+    let optionSecond = document.querySelector("#optionSecondDetails"); 
+    optionSecond.innerHTML = "";
+    if(data.optionSecond) {
+        let mainText = document.createElement("p");
+        mainText.innerText = "Трансфер до ближайших станций метро после экскурсии**";
+
+        let increaseText = document.createElement("p");
+        increaseText.innerText = "** +25% в выходные дни, +30% в будние дни"
+
+        optionSecond.appendChild(mainText);
+        optionSecond.appendChild(increaseText);
+    }
+
+    let price = document.querySelector("#priceDetails");
+    price.innerText = data.price;
+
+    let myModal = new bootstrap.Modal(document.querySelector("#modalDetails"))
+    myModal.show();
+}
+
+function getNormalDate(date) {
+    let [year, month, day] = date.split("-");
+
+    return `${day}.${month}.${year}`;
 }
 
 function editBtnHandler(event) {
@@ -161,14 +232,9 @@ function setValuesToModalEdit(routeId, guideId, orderId) {
     orderIdHiidenInput.value = orderId;
 
     let guideNameModal = document.querySelector("#guideNameModal");
-    let guideServiceCost = document.querySelector("#guideServiceCost");
-    getGuidesById(routeId).then(data => {
-        for (let record of data) {
-            if (record.id == guideId) {
-                guideServiceCost.value = record.pricePerHour;
-                guideNameModal.innerText = record.name;
-            }
-        }
+
+    getGuideById(guideId).then(data => {
+        guideNameModal.innerText = data.name;
     });
     
     let routeNameModal = document.querySelector("#routeNameModal");
@@ -183,11 +249,6 @@ function setValuesToModalEdit(routeId, guideId, orderId) {
     let optionFirst = document.querySelector("#optionFirst");
     let optionSecond = document.querySelector("#optionSecond");
     let price = document.querySelector("#price");
-
-    let guideIdHiidenInput = document.querySelector("#guideId");
-    guideIdHiidenInput.value = guideId;
-    let routeIdHiidenInput = document.querySelector("#routeId");
-    routeIdHiidenInput.value = routeId;
 
     getOrderById(orderId).then(output => {
         date.value = output.date;
@@ -307,8 +368,8 @@ async function getOrderById(id) {
     }
 }
 
-async function getGuidesById(id) {
-    finalURL = new URL(`${defaultUrlGuides}/routes/${id}/guides`);
+async function getGuideById(id) {
+    finalURL = new URL(`${defaultUrlGuides}/guides/${id}`);
     finalURL.searchParams.append("api_key", apiKey);
     try {
         let response = await fetch(finalURL);
@@ -368,6 +429,7 @@ async function editOrder() {
         let data = await res.json();
 
         getAllOrders().then(result => {
+            addPaginationBtns(result.length);
             addToOrderTable(result);
         })
 
@@ -399,18 +461,74 @@ async function deleteOrderById(id) {
         });
 
         getAllOrders().then(result => {
+            addPaginationBtns(result.length);
             addToOrderTable(result);
         })
 
-        showMessage("success", "Заказ успешно изменён");
+        showMessage("success", "Заказ успешно удалён");
 
     } catch(error) {
         showMessage("warning", error.message)
     }
 }
 
+function setActivePage(btn) {
+    btn.classList.add("bg-orange", "text-white");
+    btn.classList.remove("text-orange");
+}
+
+function clearPaginationBtns() {
+    let paginationBtns = document.querySelectorAll(".pagination-btn");
+    for (let tempBtn of paginationBtns) {
+        tempBtn.classList.remove("bg-orange", "text-white");
+        tempBtn.classList.add("text-orange");
+    }
+}
+
+function addPaginationBtns(length) {
+    let iterationsCount = 1;
+    if (length > 5) {
+        if (length / 5 != Math.floor(length / 5)) {
+            iterationsCount = Math.floor(length / 5) + 1;
+        } else {
+            iterationsCount = Math.floor(length / 5);
+        }
+    } 
+    let paginationContainer = document.querySelector("#paginationContainer");
+    paginationContainer.innerHTML = "";
+    for (let i = 0; i < iterationsCount; i++) {
+        let newPageBtn = document.createElement("button");
+        newPageBtn.classList.add("btn", "pagination-btn", "border-5", "border-orange", "me-1");
+        newPageBtn.classList.add("border-orange", "me-1", "text-orange");
+        newPageBtn.setAttribute("data-page", i + 1);
+        newPageBtn.innerText = i + 1;
+        if (i == 0) {
+            newPageBtn.classList.remove("text-orange");
+            newPageBtn.classList.add("bg-orange", "text-white");
+        }
+        paginationContainer.appendChild(newPageBtn);
+    }
+
+    let paginationBtns = document.querySelectorAll(".pagination-btn");
+    for (let btn of paginationBtns) {
+        btn.addEventListener("click", () => {
+
+            clearPaginationBtns();
+            
+            setActivePage(btn);
+
+            getAllOrders().then(result => {
+                addToOrderTable(result, btn.dataset.page);
+            })
+        })
+    }
+
+    console.log(iterationsCount);
+}
+
 window.onload = function() {
     getAllOrders().then(result => {
+        addPaginationBtns(result.length);
         addToOrderTable(result);
     })
 

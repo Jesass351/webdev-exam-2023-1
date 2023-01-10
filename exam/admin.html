@@ -65,6 +65,8 @@
             <div class="container-fluid" id="ordersList"></div>
         </div>
 
+        <div class="pagination d-flex justify-content-center mt-5" id="paginationContainer"></div>
+
     </section>
 
     <div class="position-fixed bottom-0 end-0 m-3" id="alertsContainer"></div>
@@ -86,7 +88,6 @@
                                 </div>
                                 <div class="col-8" id="guidesNameDivModal">
                                     <span id="guideNameModal" class="text-orange fs-5"></span>
-                                    <input type="text" hidden name="guideId" id="guideId">
                                     <input type="text" hidden name="guideServiceCost" id="guideServiceCost">
                                 </div>
                             </div>
@@ -98,7 +99,6 @@
                                     <span>Название маршрута</span>
                                 </div>
                                 <div class="col-8">
-                                    <input type="text" hidden name="routeId" id="routeId">
                                     <span id="routeNameModal" class="text-orange fs-5"></span>
                                 </div>
                             </div>
@@ -190,6 +190,35 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Нет</button>
                     <button type="button" class="btn bg-orange text-white" data-bs-dismiss="modal" id="deleteOrderBtn">Да</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDetails" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                   <span class="fw-bold fs-4">Заявка номер&nbsp;<span class="text-orange" id="orderIdDetails"></span></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                   <div class="container">
+                        <p class="mb-3">ФИО гида:&nbsp;<span id="guideNameDetails" class="text-orange"></span></p>
+                        <p class="mb-3">Название маршрута:&nbsp;<span id="routeNameDetails" class="text-orange"></span></p>
+                        <p class="mb-3">Дата экскурсии:&nbsp;<span id="dateDetails" class="text-orange"></span></p>
+                        <p class="mb-3">Время начала:&nbsp;<span id="timeDetails" class="text-orange"></span></p>
+                        <p class="mb-3">Длительность экскурсии:&nbsp;<span id="durationDetails" class="text-orange"></span></p>
+                        <p class="mb-3">Количество человек:&nbsp;<span id="personsDetails" class="text-orange"></span></p>
+
+                        <p class="fs-4">Дополнительные опции:</p>
+                        <div id="optionFirstDetails" class="mb-4"></div>
+
+                        <div id="optionSecondDetails"></div>
+                        
+                        <span class="mb-3 fs-4">Итоговая стоимость:&nbsp;<span id="priceDetails" class="text-orange fs-4"></span>&#8381</span>
+
+                   </div>
                 </div>
             </div>
         </div>
