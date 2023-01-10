@@ -1,15 +1,16 @@
 const apiKey = "cf43badf-645c-488b-9363-39198ca1ce8d";
-const defaultUrl = "http://exam-2023-1-api.std-900.ist.mospolytech.ru/api/orders";
+const defUrl = "http://exam-2023-1-api.std-900.ist.mospolytech.ru/api/orders";
 
-const defaultUrlGuides = "http://exam-2023-1-api.std-900.ist.mospolytech.ru/api"
+const urlGuides = "http://exam-2023-1-api.std-900.ist.mospolytech.ru/api";
 
-const defaultUrlRoutes = "http://exam-2023-1-api.std-900.ist.mospolytech.ru/api";
+const urlRoutes = "http://exam-2023-1-api.std-900.ist.mospolytech.ru/api";
 
 function showMessage(style, message) {
     let alerts = document.querySelector("#alertsContainer");
     let alert = document.createElement("div");
 
-    alert.classList.add("alert", "alert-dismissible", `alert-${style}`, "w-100", "m-1" );
+    alert.classList.add("alert", "alert-dismissible", `alert-${style}`);
+    alert.classList.add("w-100", "m-1");
     alert.setAttribute("role", "alert");
     alert.innerText = message;
 
@@ -23,92 +24,60 @@ function showMessage(style, message) {
 
     setTimeout(() => {
         alert.remove();
-    },5000);
+    }, 5000);
 }
 
 async function getAllOrders() {
-    let finalURL = new URL(defaultUrl);
+    let finalURL = new URL(defUrl);
     finalURL.searchParams.append("api_key", apiKey);
     try {
         let response = await fetch(finalURL);
         let data = await response.json();
 
         return data;
-    } catch(error) {
+    } catch (error) {
         showMessage("warning", error.message);
     }
 }
 
-function addToOrderTable(data, page = 1) {
-    let counter = page*5 - 4;
-    let ordersList = document.querySelector("#ordersList");
-    ordersList.innerHTML = "";
-    data = data.slice(page*5 - 5, page*5);
-    for (let record of data) {
-        let newRow = document.createElement("div");
-        newRow.classList.add("row", "text-center", "mb-3", "border-top");
-        newRow.classList.add("pt-3")
-
-        let orderNum = document.createElement("div");
-        orderNum.classList.add("col-1", "p-0", "border-end");
-        orderNum.innerText = counter;
-        newRow.appendChild(orderNum);
-
-        let nameOfRoute = document.createElement("div");
-        nameOfRoute.classList.add("col-3", "p-0", "border-end");
-        getNameOfRouteById(record.route_id).then(result => {
-            nameOfRoute.innerText = result;
-        })
-        newRow.appendChild(nameOfRoute);
-
-        let priceDiv = document.createElement("div");
-        priceDiv.classList.add("col-3", "p-0", "border-end");
-        priceDiv.innerText = record.price;
-        newRow.appendChild(priceDiv);
-
-        let detailsDiv = document.createElement("div");
-        detailsDiv.classList.add("col-3", "text-center", "p-0", "border-end");
-
-        let detailsBtn = document.createElement("button");
-        detailsBtn.classList.add("btn", "border-orange", "text-orange");
-        detailsBtn.classList.add("p-1", "fs-7");
-        detailsBtn.setAttribute("data-orderid", record.id);
-        detailsBtn.innerText = "Подробнее";
-        detailsBtn.addEventListener("click", () => {
-            showDetails(record);
-        })
-
-        detailsDiv.appendChild(detailsBtn);
-        newRow.appendChild(detailsDiv);
-
-        let controlDiv = document.createElement("div");
-        controlDiv.classList.add("col-2", "d-flex", "justify-content-between");
-
-        let editBtn = document.createElement("i");
-        editBtn.classList.add("bi", "bi-pen");
-        editBtn.setAttribute("data-orderid", record.id);
-        editBtn.setAttribute("data-routeid", record.route_id);
-        editBtn.setAttribute("data-guideid", record.guide_id);
-
-        editBtn.onclick = editBtnHandler;
-
-        let removeBtn = document.createElement("i");
-        removeBtn.classList.add("bi", "bi-trash");
-        removeBtn.setAttribute("data-orderid", record.id);
-        removeBtn.onclick = removeBtnHandler;
-
-
-        controlDiv.appendChild(editBtn);
-        controlDiv.appendChild(removeBtn);
-        newRow.appendChild(controlDiv);
-
-        counter++;
-        ordersList.appendChild(newRow);
+async function getNameOfRouteById(id) {
+    finalURL = new URL(urlRoutes + "/routes");
+    finalURL.searchParams.append("api_key", apiKey);
+    try {
+        let response = await fetch(finalURL);
+        let data = await response.json();
+        for (let record of data) {
+            if (record.id == id) {
+                // console.log(record.name);
+                return record.name;
+            }
+        }
+    } catch (error) {
+        showMessage("warning", error.message);
     }
 }
 
+async function getGuideById(id) {
+    finalURL = new URL(`${urlGuides}/guides/${id}`);
+    finalURL.searchParams.append("api_key", apiKey);
+    try {
+        let response = await fetch(finalURL);
+        let data = await response.json();
+        return data;
+    } catch (error) {
+        showMessage("warning", error.message);
+    }
+}
+
+function getNormalDate(date) {
+    let [year, month, day] = date.split("-");
+
+    return `${day}.${month}.${year}`;
+}
+
+
 function showDetails(data) {
-    console.log(data);
+    // console.log(data);
 
     let orderIdDetails = document.querySelector("#orderIdDetails");
     orderIdDetails.innerText = data.id;
@@ -116,18 +85,18 @@ function showDetails(data) {
     let guideName = document.querySelector("#guideNameDetails");
     getGuideById(data.guide_id).then(result => {
         guideName.innerText = result.name;
-    })
+    });
 
     let routeName = document.querySelector("#routeNameDetails");
     getNameOfRouteById(data.route_id).then(result => {
         routeName.innerText = result;
-    })
+    });
 
     let date = document.querySelector("#dateDetails");
     date.innerText = getNormalDate(data.date);
 
     let time = document.querySelector("#timeDetails");
-    time.innerText = data.time.slice(0,5);
+    time.innerText = data.time.slice(0, 5);
 
     let duration = document.querySelector("#durationDetails");
     duration.innerText = `${data.duration} часа`;
@@ -137,12 +106,12 @@ function showDetails(data) {
 
     let optionFirst = document.querySelector("#optionFirstDetails");
     optionFirst.innerHTML = "";
-    if(data.optionFirst) {
+    if (data.optionFirst) {
         let mainText = document.createElement("p");
         mainText.innerText = "Быстрый выезд гида (в течение часа)*";
 
         let increaseText = document.createElement("p");
-        increaseText.innerText = "* +30%"
+        increaseText.innerText = "* +30%";
 
         optionFirst.appendChild(mainText);
         optionFirst.appendChild(increaseText);
@@ -150,12 +119,13 @@ function showDetails(data) {
 
     let optionSecond = document.querySelector("#optionSecondDetails"); 
     optionSecond.innerHTML = "";
-    if(data.optionSecond) {
+    if (data.optionSecond) {
         let mainText = document.createElement("p");
-        mainText.innerText = "Трансфер до ближайших станций метро после экскурсии**";
+        mainText.innerText = "Трансфер до ближайших станций метро";
+        mainText.innerText += "после экскурсии**";
 
         let increaseText = document.createElement("p");
-        increaseText.innerText = "** +25% в выходные дни, +30% в будние дни"
+        increaseText.innerText = "** +25% в выходные дни, +30% в будние дни";
 
         optionSecond.appendChild(mainText);
         optionSecond.appendChild(increaseText);
@@ -164,56 +134,9 @@ function showDetails(data) {
     let price = document.querySelector("#priceDetails");
     price.innerText = data.price;
 
-    let myModal = new bootstrap.Modal(document.querySelector("#modalDetails"))
+    let myModal = new bootstrap.Modal(document.querySelector("#modalDetails"));
     myModal.show();
 }
-
-function getNormalDate(date) {
-    let [year, month, day] = date.split("-");
-
-    return `${day}.${month}.${year}`;
-}
-
-function editBtnHandler(event) {
-    let routeId = event.target.dataset.routeid;
-    let guideId = event.target.dataset.guideid;
-    let orderId = event.target.dataset.orderid;
-    setMinTodayDate();
-    setValuesToModalEdit(routeId, guideId, orderId);
-
-    let myModal = new bootstrap.Modal(document.querySelector("#modalEdit"))
-    myModal.show();
-}
-
-function validateTime(event) {
-    time = document.querySelector("#time").value;
-    
-    if ((time.slice(3,5) == "00" || time.slice(3,5) == "30") &&
-    parseInt(time.slice(0,2), 10) >= 9 && parseInt(time.slice(0,2), 10) <= 23
-    ) {
-        return true;
-    } else {
-        invalidTimeMessage();
-        event.target.value = "09:00"
-        return false;
-    };
-}
-function invalidTimeMessage() {
-    let timeDivModal = document.querySelector("#timeDivModal");
-
-    let messageDiv = document.createElement("div");
-    messageDiv.classList.add("my-3", "p-1", "rounded-2", "bg-warning");
-
-    let message = document.createElement("span");
-    message.innerText = "Экскурсии возможны с 09:00 до 23:00 раз в 30 минут";
-    messageDiv.appendChild(message);
-
-    timeDivModal.appendChild(messageDiv);
-
-    setTimeout(() => {
-        messageDiv.remove();
-    },3000);
-}   
 
 function setMinTodayDate() {
     let today = new Date();
@@ -225,6 +148,20 @@ function setMinTodayDate() {
     
     let date = document.querySelector("#date");
     date.setAttribute("min", today);
+}
+
+async function getOrderById(id) {
+    let finalURL = new URL(defUrl + `/${id}`);
+    finalURL.searchParams.append("api_key", apiKey);
+    
+    try {
+        let response = await fetch(finalURL);
+        let data = await response.json();
+
+        return data;
+    } catch (error) {
+        showMessage("warning", error.message);
+    }
 }
 
 function setValuesToModalEdit(routeId, guideId, orderId) {
@@ -258,40 +195,125 @@ function setValuesToModalEdit(routeId, guideId, orderId) {
         optionFirst.checked = output.optionFirst;
         optionSecond.checked = output.optionSecond;
         price.innerText = output.price;
-    })
+    });
 }
 
+function editBtnHandler(event) {
+    let routeId = event.target.dataset.routeid;
+    let guideId = event.target.dataset.guideid;
+    let orderId = event.target.dataset.orderid;
+    setMinTodayDate();
+    setValuesToModalEdit(routeId, guideId, orderId);
 
-function calculatePrice() {
-    let price = document.querySelector("#price");
-    let form = document.querySelector("#modalForm");
-    let formElements = form.elements;
+    let myModal = new bootstrap.Modal(document.querySelector("#modalEdit"));
+    myModal.show();
+}
 
-    let guideServiceCost = formElements["guideServiceCost"].value;
-    let hoursNumber = formElements["duration"].value;
-    let date = formElements["date"].value;
-    let time = formElements["time"].value;
-    let persons = formElements["persons"].value;
+function removeBtnHandler(event) {
+    let deleteOrderBtn = document.querySelector("#deleteOrderBtn");
+    deleteOrderBtn.setAttribute("data-orderid", event.target.dataset.orderid);
+    let myModal = new bootstrap.Modal(document.querySelector("#modalDelete"));
+    myModal.show();
+}
+
+function addToOrderTable(data, page = 1) {
+    let counter = page * 5 - 4;
+    let ordersList = document.querySelector("#ordersList");
+    ordersList.innerHTML = "";
+    data = data.slice(page * 5 - 5, page * 5);
+    for (let record of data) {
+        let newRow = document.createElement("div");
+        newRow.classList.add("row", "text-center", "mb-3", "border-top");
+        newRow.classList.add("pt-3");
+
+        let orderNum = document.createElement("div");
+        orderNum.classList.add("col-1", "p-0", "border-end");
+        orderNum.innerText = counter;
+        newRow.appendChild(orderNum);
+
+        let nameOfRoute = document.createElement("div");
+        nameOfRoute.classList.add("col-3", "p-0", "border-end");
+        getNameOfRouteById(record.route_id).then(result => {
+            nameOfRoute.innerText = result;
+        });
+        newRow.appendChild(nameOfRoute);
+
+        let priceDiv = document.createElement("div");
+        priceDiv.classList.add("col-3", "p-0", "border-end");
+        priceDiv.innerText = record.price;
+        newRow.appendChild(priceDiv);
+
+        let detailsDiv = document.createElement("div");
+        detailsDiv.classList.add("col-3", "text-center", "p-0", "border-end");
+
+        let detailsBtn = document.createElement("button");
+        detailsBtn.classList.add("btn", "border-orange", "text-orange");
+        detailsBtn.classList.add("p-1", "fs-7");
+        detailsBtn.setAttribute("data-orderid", record.id);
+        detailsBtn.innerText = "Подробнее";
+        detailsBtn.addEventListener("click", () => {
+            showDetails(record);
+        });
+
+        detailsDiv.appendChild(detailsBtn);
+        newRow.appendChild(detailsDiv);
+
+        let controlDiv = document.createElement("div");
+        controlDiv.classList.add("col-2", "d-flex", "justify-content-between");
+
+        let editBtn = document.createElement("i");
+        editBtn.classList.add("bi", "bi-pen");
+        editBtn.setAttribute("data-orderid", record.id);
+        editBtn.setAttribute("data-routeid", record.route_id);
+        editBtn.setAttribute("data-guideid", record.guide_id);
+
+        editBtn.onclick = editBtnHandler;
+
+        let removeBtn = document.createElement("i");
+        removeBtn.classList.add("bi", "bi-trash");
+        removeBtn.setAttribute("data-orderid", record.id);
+        removeBtn.onclick = removeBtnHandler;
+
+
+        controlDiv.appendChild(editBtn);
+        controlDiv.appendChild(removeBtn);
+        newRow.appendChild(controlDiv);
+
+        counter++;
+        ordersList.appendChild(newRow);
+    }
+}
+
+function invalidTimeMessage() {
+    let timeDivModal = document.querySelector("#timeDivModal");
+
+    let messageDiv = document.createElement("div");
+    messageDiv.classList.add("my-3", "p-1", "rounded-2", "bg-warning");
+
+    let message = document.createElement("span");
+    message.innerText = "Экскурсии возможны с 09:00 до 23:00 раз в 30 минут";
+    messageDiv.appendChild(message);
+
+    timeDivModal.appendChild(messageDiv);
+
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}  
+
+function validateTime(event) {
+    time = document.querySelector("#time").value;
     
-    let dayOff = isThisDayOff(date);
-    let morning = isItMorning(time);
-    let evening = isItEvening(time);
-
-    persons = numberOfVisitors(persons);
-
-    let optionFirstStatus = formElements["optionFirst"].checked;
-
-    let optionFirst = optionFirstStatus ? 1.3 : 1;
-
-    let optionSecondStatus = formElements["optionSecond"].checked;
-    let optionSecond = getMultiplyerSecondOption(optionSecondStatus,date);
-
-    let totalPrice = guideServiceCost * hoursNumber * dayOff + morning;
-    totalPrice = totalPrice + evening + persons;
-    totalPrice = totalPrice * optionFirst * optionSecond
-    price.innerText = Math.round(totalPrice);
-}
-
+    if ((time.slice(3, 5) == "00" || time.slice(3, 5) == "30") &&
+    parseInt(time.slice(0, 2), 10) >= 9 && parseInt(time.slice(0, 2), 10) <= 23
+    ) {
+        return true;
+    } else {
+        invalidTimeMessage();
+        event.target.value = "09:00";
+        return false;
+    };
+} 
 function getMultiplyerSecondOption(checked, dateString) {
     let [year, month, day] = dateString.split('-');
 
@@ -317,14 +339,14 @@ function numberOfVisitors(persons) {
 }
 
 function isItMorning(time) {
-    let hour = time.slice(0,2);
+    let hour = time.slice(0, 2);
     if (hour >= 9 && hour <= 12) {
         return 400;
     } else return 0;
 }
 
 function isItEvening(time) {
-    let hour = time.slice(0,2);
+    let hour = time.slice(0, 2);
     if (hour >= 20 && hour <= 23) {
         return 1000;
     } else return 0; 
@@ -340,7 +362,7 @@ const holidays = [
     '09-01',
     '06-12',
     '05-01',
-]
+];
 
 function isThisDayOff(dateString) {
     let [year, month, day] = dateString.split('-');
@@ -349,129 +371,40 @@ function isThisDayOff(dateString) {
 
     let monthAndDay = `${month}-${day}`;
 
-    if (date.getDay() == 0 || date.getDay() == 6 || (holidays.includes(monthAndDay))) {
+    if (date.getDay() == 0 || date.getDay() == 6 ||
+    (holidays.includes(monthAndDay))) {
         return 1.5;
     } else return 1;
 }
 
-async function getOrderById(id) {
-    let finalURL = new URL(defaultUrl + `/${id}`);
-    finalURL.searchParams.append("api_key", apiKey);
+function calculatePrice() {
+    let price = document.querySelector("#price");
+    let form = document.querySelector("#modalForm");
+    let formElements = form.elements;
+
+    let guideServiceCost = formElements["guideServiceCost"].value;
+    let hoursNumber = formElements["duration"].value;
+    let date = formElements["date"].value;
+    let time = formElements["time"].value;
+    let persons = formElements["persons"].value;
     
-    try {
-        let response = await fetch(finalURL);
-        let data = await response.json();
+    let dayOff = isThisDayOff(date);
+    let morning = isItMorning(time);
+    let evening = isItEvening(time);
 
-        return data;
-    } catch(error) {
-        showMessage("warning", error.message);
-    }
-}
+    persons = numberOfVisitors(persons);
 
-async function getGuideById(id) {
-    finalURL = new URL(`${defaultUrlGuides}/guides/${id}`);
-    finalURL.searchParams.append("api_key", apiKey);
-    try {
-        let response = await fetch(finalURL);
-        let data = await response.json();
-        return data;
-    }
-    catch(error) {
-        showMessage("warning", error.message);
-    }
-}
+    let optionFirstStatus = formElements["optionFirst"].checked;
 
-async function getNameOfRouteById(id) {
-    finalURL = new URL(defaultUrlRoutes + "/routes");
-    finalURL.searchParams.append("api_key", apiKey);
-    try {
-        let response = await fetch(finalURL);
-        let data = await response.json();
-        for (let record of data) {
-            if (record.id == id) {
-                console.log(record.name);
-                return record.name;
-            }
-        }
-    }
-    catch(error) {
-        showMessage("warning", error.message);
-    }
-}
+    let optionFirst = optionFirstStatus ? 1.3 : 1;
 
-async function editOrder() {
-    let formCreateOrder = document.querySelector("#modalForm");
-    formElements = formCreateOrder.elements;
+    let optionSecondStatus = formElements["optionSecond"].checked;
+    let optionSecond = getMultiplyerSecondOption(optionSecondStatus, date);
 
-    let price = document.querySelector("#price").innerText;
-    let optionFirst = formElements["optionFirst"].checked ? 1 : 0;
-    let optionSecond = formElements["optionSecond"].checked ? 1 : 0;
-
-    let form = document.createElement("form");
-    let dataFromForm = new FormData(form);
-
-    dataFromForm.append("date", formElements["date"].value);
-    dataFromForm.append("time", formElements["time"].value);
-    dataFromForm.append("duration", formElements["duration"].value);
-    dataFromForm.append("persons", formElements["persons"].value);
-    dataFromForm.append("price", price);
-    dataFromForm.append("optionFirst", optionFirst);
-    dataFromForm.append("optionSecond", optionSecond);
-
-    let finalURL = new URL(defaultUrl + `/${formElements["orderId"].value}`);
-    finalURL.searchParams.append("api_key", apiKey);
-
-    try {
-        let res = await fetch(finalURL, {
-            method: 'PUT',
-            body: dataFromForm
-        });
-        let data = await res.json();
-
-        getAllOrders().then(result => {
-            addPaginationBtns(result.length);
-            addToOrderTable(result);
-        })
-
-        showMessage("success", "Заказ успешно изменён");
-    } catch(error) {
-        showMessage("warning", error.message)
-    }
-}
-
-function removeBtnHandler(event) {
-    let deleteOrderBtn = document.querySelector("#deleteOrderBtn");
-    deleteOrderBtn.setAttribute("data-orderid", event.target.dataset.orderid);
-    let myModal = new bootstrap.Modal(document.querySelector("#modalDelete"))
-    myModal.show();
-}
-
-function deleteOrder(event) {
-    let orderId = event.target.dataset.orderid;
-    deleteOrderById(orderId);
-}
-
-async function deleteOrderById(id) {
-    let finalURL = new URL(defaultUrl + `/${id}`);
-    finalURL.searchParams.append("api_key", apiKey);
-
-    try {
-        let res = await fetch(finalURL, {
-            method: 'DELETE',
-        });
-
-        let recordId = await res.json();
-
-        getAllOrders().then(result => {
-            addPaginationBtns(result.length);
-            addToOrderTable(result);
-        })
-
-        showMessage("success", `Заказ ${recordId.id} успешно удалён`);
-
-    } catch(error) {
-        showMessage("warning", error.message)
-    }
+    let totalPrice = guideServiceCost * hoursNumber * dayOff + morning;
+    totalPrice = totalPrice + evening + persons;
+    totalPrice = totalPrice * optionFirst * optionSecond;
+    price.innerText = Math.round(totalPrice);
 }
 
 function setActivePage(btn) {
@@ -500,7 +433,7 @@ function addPaginationBtns(length) {
     paginationContainer.innerHTML = "";
     for (let i = 0; i < iterationsCount; i++) {
         let newPageBtn = document.createElement("button");
-        newPageBtn.classList.add("btn", "pagination-btn", "border-5", "border-orange", "me-1");
+        newPageBtn.classList.add("btn", "pagination-btn", "border-5");
         newPageBtn.classList.add("border-orange", "me-1", "text-orange");
         newPageBtn.setAttribute("data-page", i + 1);
         newPageBtn.innerText = i + 1;
@@ -521,18 +454,86 @@ function addPaginationBtns(length) {
 
             getAllOrders().then(result => {
                 addToOrderTable(result, btn.dataset.page);
-            })
-        })
+            });
+        });
     }
 
-    console.log(iterationsCount);
+    // console.log(iterationsCount);
+}
+
+async function editOrder() {
+    let formCreateOrder = document.querySelector("#modalForm");
+    formElements = formCreateOrder.elements;
+
+    let price = document.querySelector("#price").innerText;
+    let optionFirst = formElements["optionFirst"].checked ? 1 : 0;
+    let optionSecond = formElements["optionSecond"].checked ? 1 : 0;
+
+    let form = document.createElement("form");
+    let dataFromForm = new FormData(form);
+
+    dataFromForm.append("date", formElements["date"].value);
+    dataFromForm.append("time", formElements["time"].value);
+    dataFromForm.append("duration", formElements["duration"].value);
+    dataFromForm.append("persons", formElements["persons"].value);
+    dataFromForm.append("price", price);
+    dataFromForm.append("optionFirst", optionFirst);
+    dataFromForm.append("optionSecond", optionSecond);
+
+    let finalURL = new URL(defUrl + `/${formElements["orderId"].value}`);
+    finalURL.searchParams.append("api_key", apiKey);
+
+    try {
+        let res = await fetch(finalURL, {
+            method: 'PUT',
+            body: dataFromForm
+        });
+        let data = await res.json();
+
+        getAllOrders().then(result => {
+            addPaginationBtns(result.length);
+            addToOrderTable(result);
+        });
+
+        showMessage("success", "Заявка успешно изменена");
+    } catch (error) {
+        showMessage("warning", error.message);
+    }
+}
+
+async function deleteOrderById(id) {
+    let finalURL = new URL(defUrl + `/${id}`);
+    finalURL.searchParams.append("api_key", apiKey);
+
+    try {
+        let res = await fetch(finalURL, {
+            method: 'DELETE',
+        });
+
+        let recordId = await res.json();
+
+        getAllOrders().then(result => {
+            addPaginationBtns(result.length);
+            addToOrderTable(result);
+        });
+
+        showMessage("success", `Заявка ${recordId.id} успешно удалена`);
+
+    } catch (error) {
+        showMessage("warning", error.message);
+    }
+}
+
+function deleteOrder(event) {
+    let orderId = event.target.dataset.orderid;
+    deleteOrderById(orderId);
 }
 
 window.onload = function() {
     getAllOrders().then(result => {
         addPaginationBtns(result.length);
         addToOrderTable(result);
-    })
+    });
 
     let elementsModalForm = document.querySelectorAll(".add-order-extra-class");
     for (let element of elementsModalForm) {
@@ -548,4 +549,4 @@ window.onload = function() {
     let deleteOrderBtn = document.querySelector("#deleteOrderBtn");
     deleteOrderBtn.onclick = deleteOrder;
 
-}
+};
