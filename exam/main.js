@@ -83,7 +83,7 @@ function addGuidesToMainTable(data) {
         // console.log(record);
         let newRow = document.createElement("div");
         newRow.classList.add("row", "text-center", "p-0");
-        newRow.classList.add("pt-1", "pb-2", "border-top");
+        newRow.classList.add("pt-1", "pb-2", "border-top", "text-break");
 
         let avatarDiv = document.createElement("div");
         avatarDiv.classList.add("col-1", "p-0", "d-flex");
@@ -136,6 +136,11 @@ function addGuidesToMainTable(data) {
         chooseBtnDiv.appendChild(chooseBtn);
         newRow.appendChild(chooseBtnDiv);
 
+        if (window.screen.width < 450) {
+            name.classList.add("fs-7");
+            language.classList.add("fs-7");
+        }
+
         mainGiudeTable.appendChild(newRow);
     }
 }
@@ -149,7 +154,8 @@ function searchGuidesByFiltersAndValidate() {
     workExpMin.setAttribute("max", workExpMax.value);
     workExpMax.setAttribute("min", workExpMin.value);
 
-    if (document.querySelector("#selectLangGuideForm").value != "default") {
+    if (document.querySelector("#selectLangGuideForm").value != ("default" &&
+    "notSelected")) {
         language = document.querySelector("#selectLangGuideForm").value;
     } else {
         language = "";
@@ -194,6 +200,11 @@ function createDefaultFilterLanguage() {
     defaultOption.setAttribute("value", "default");
     defaultOption.innerText = "Язык экскурсии";
     filterSelect.appendChild(defaultOption);
+
+    let notSelected = document.createElement("option");
+    notSelected.setAttribute("value", "notSelected");
+    notSelected.innerText = "Не выбрано";
+    filterSelect.appendChild(notSelected);
 }
 
 function createDefaultFilterExp(data) {
@@ -355,7 +366,7 @@ function addRoutesToMainTable(data) {
 
     for (let record of data) {
         let newRow = document.createElement('div');
-        newRow.classList.add("row", "p-0", "mb-3", "border-top");
+        newRow.classList.add("row", "p-0", "mb-3", "border-top", "text-break");
         mainTable.appendChild(newRow);
 
         let name = document.createElement('div');
@@ -366,7 +377,7 @@ function addRoutesToMainTable(data) {
         let description = document.createElement('div');
         description.classList.add("col-3", "mt-1", "border-end");
         let descriptionText = document.createElement("p");
-        descriptionText.classList.add("muted", "text-break");
+        descriptionText.classList.add("muted");
         if (record.description.length > 50) {
             let descriptionToolTip = document.createElement("a");
             descriptionToolTip.setAttribute("data-bs-toggle", "tooltip");
@@ -385,7 +396,7 @@ function addRoutesToMainTable(data) {
         mainObjects.classList.add("col-3", "border-end");
 
         let mainObjectsText = document.createElement("p");
-        mainObjectsText.classList.add("muted", "text-break");
+        mainObjectsText.classList.add("muted");
 
         if (record.mainObject.length > 50) {
             let objectsToolTip = document.createElement("a");
