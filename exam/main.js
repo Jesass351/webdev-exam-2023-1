@@ -259,14 +259,17 @@ function showAndGoGuides() {
     window.location.href = "#mapSection";
 }
 
+let directions;
 function createDirections(firstPoint, secondPoint) {
-    console.log(map);
+    if (directions) {
+        directions.clear();
+    }
 
-    const directions = new mapgl.Directions(map, {
+    directions = new mapgl.Directions(map, {
         directionsApiKey: 'ffcb67d7-ac14-44b4-8302-ce9db35ca3b0',
     });
 
-    directions.clear(); //как тебя удалить то...
+    directions.clear();
     console.log(directions);
 
 
@@ -669,7 +672,7 @@ function getMultiplyerSecondOption(checked, dateString) {
 
     let monthAndDay = `${month}-${day}`;
 
-    if (date.getDay() == 0 || date.getDay() == 6 && checked) {
+    if ((date.getDay() == 0 || date.getDay() == 6) && checked) {
         return 1.25;
     } else if (checked) {
         return 1.3;
@@ -748,11 +751,13 @@ function calculatePrice() {
     let optionFirst = optionFirstStatus ? 1.3 : 1;
 
     let optionSecondStatus = formElements["optionSecond"].checked;
+
     let optionSecond = getMultiplyerSecondOption(optionSecondStatus, date);
 
     let totalPrice = guideServiceCost * hoursNumber * dayOff + morning;
     totalPrice = totalPrice + evening + persons;
-    totalPrice = totalPrice * optionFirst * optionSecond;
+    totalPrice = totalPrice * optionFirst;
+    totalPrice = totalPrice * optionSecond;
     price.innerText = Math.round(totalPrice);
 }
 

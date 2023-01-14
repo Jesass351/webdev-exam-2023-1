@@ -75,17 +75,14 @@ function getNormalDate(date) {
     return `${day}.${month}.${year}`;
 }
 
-
 function showDetails(data) {
-    // console.log(data);
 
     let orderIdDetails = document.querySelector("#orderIdDetails");
     orderIdDetails.innerText = data.id;
 
     let guideName = document.querySelector("#guideNameDetails");
-    getGuideById(data.guide_id).then(result => {
-        guideName.innerText = result.name;
-    });
+    let guidePricePerHour;
+
 
     let routeName = document.querySelector("#routeNameDetails");
     getNameOfRouteById(data.route_id).then(result => {
@@ -99,16 +96,21 @@ function showDetails(data) {
     time.innerText = data.time.slice(0, 5);
 
     let duration = document.querySelector("#durationDetails");
-    duration.innerText = `${data.duration} часа`;
+    duration.innerText = data.duration;
 
     let persons = document.querySelector("#personsDetails");
     persons.innerText = data.persons;
 
     let optionFirst = document.querySelector("#optionFirstDetails");
     optionFirst.innerHTML = "";
+    getGuideById(data.guide_id).then(result => {
+        guideName.innerText = result.name;
+    });
+
     if (data.optionFirst) {
         let mainText = document.createElement("p");
         mainText.innerText = "Быстрый выезд гида (в течение часа)*";
+        mainText.classList.add("text-orange");
 
         let increaseText = document.createElement("p");
         increaseText.innerText = "* +30%";
