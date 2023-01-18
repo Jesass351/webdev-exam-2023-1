@@ -171,9 +171,11 @@ function setValuesToModalEdit(routeId, guideId, orderId) {
     orderIdHiidenInput.value = orderId;
 
     let guideNameModal = document.querySelector("#guideNameModal");
+    let guideServiceCost = document.querySelector("#guideServiceCost");
 
     getGuideById(guideId).then(data => {
         guideNameModal.innerText = data.name;
+        guideServiceCost.value = data.pricePerHour;
     });
     
     let routeNameModal = document.querySelector("#routeNameModal");
@@ -316,6 +318,7 @@ function validateTime(event) {
         return false;
     };
 } 
+
 function getMultiplyerSecondOption(checked, dateString) {
     let [year, month, day] = dateString.split('-');
 
@@ -323,12 +326,31 @@ function getMultiplyerSecondOption(checked, dateString) {
 
     let monthAndDay = `${month}-${day}`;
 
-    if (date.getDay() == 0 || date.getDay() == 6 && checked) {
+    if ((date.getDay() == 0 || date.getDay() == 6) && checked) {
         return 1.25;
     } else if (checked) {
         return 1.3;
     } else return 1;
 }
+
+function invalidPersonsMessage() {
+    let personsDivModal = document.querySelector("#personsDivModal");
+
+    let messageDiv = document.createElement("div");
+    messageDiv.classList.add("my-3", "p-1", "rounded-2", "bg-warning");
+
+    let message = document.createElement("span");
+    message.innerText = "Допускаются группы от 1 до 20 человек";
+    messageDiv.appendChild(message);
+
+    personsDivModal.appendChild(messageDiv);
+    let persons = document.querySelector("#persons");
+    persons.value = 1;
+
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}  
 
 function numberOfVisitors(persons) {
     if (persons < 5) {
@@ -337,7 +359,7 @@ function numberOfVisitors(persons) {
         return 1000;
     } else if (persons >= 10 && persons <= 20) {
         return 1500;
-    }
+    } else invalidPersonsMessage(); return 0;
 }
 
 function isItMorning(time) {
@@ -401,11 +423,13 @@ function calculatePrice() {
     let optionFirst = optionFirstStatus ? 1.3 : 1;
 
     let optionSecondStatus = formElements["optionSecond"].checked;
+
     let optionSecond = getMultiplyerSecondOption(optionSecondStatus, date);
 
     let totalPrice = guideServiceCost * hoursNumber * dayOff + morning;
     totalPrice = totalPrice + evening + persons;
-    totalPrice = totalPrice * optionFirst * optionSecond;
+    totalPrice = totalPrice * optionFirst;
+    totalPrice = totalPrice * optionSecond;
     price.innerText = Math.round(totalPrice);
 }
 

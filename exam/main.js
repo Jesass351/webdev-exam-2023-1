@@ -664,7 +664,6 @@ function getCheckedGuide() {
     return checkedGuide;
 }
 
-
 function getMultiplyerSecondOption(checked, dateString) {
     let [year, month, day] = dateString.split('-');
 
@@ -679,6 +678,25 @@ function getMultiplyerSecondOption(checked, dateString) {
     } else return 1;
 }
 
+function invalidPersonsMessage() {
+    let personsDivModal = document.querySelector("#personsDivModal");
+
+    let messageDiv = document.createElement("div");
+    messageDiv.classList.add("my-3", "p-1", "rounded-2", "bg-warning");
+
+    let message = document.createElement("span");
+    message.innerText = "Допускаются группы от 1 до 20 человек";
+    messageDiv.appendChild(message);
+
+    personsDivModal.appendChild(messageDiv);
+    let persons = document.querySelector("#persons");
+    persons.value = 1;
+
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}  
+
 function numberOfVisitors(persons) {
     if (persons < 5) {
         return 0;
@@ -686,7 +704,7 @@ function numberOfVisitors(persons) {
         return 1000;
     } else if (persons >= 10 && persons <= 20) {
         return 1500;
-    }
+    } else invalidPersonsMessage(); return 0;
 }
 
 function isItMorning(time) {
